@@ -1,0 +1,26 @@
+{
+  "name": "g.p.i-tech-ciclo-4",
+  "version": "1.0.0",
+  "description": "En este repositorio se encuentra nuestro proyecto del ciclo 4 de MinTic",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon App",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nataliadoria/G.P.I-Tech-ciclo-4.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nataliadoria/G.P.I-Tech-ciclo-4/issues"
+  },
+  "homepage": "https://github.com/nataliadoria/G.P.I-Tech-ciclo-4#readme",
+  "type": "module",
+  "dependencies": {
+    "express": "^4.17.1",
+    "mongoose": "^6.0.12",
+    "nodemon": "^2.0.14"
+  }
+}
