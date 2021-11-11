@@ -4,7 +4,7 @@
   "description": "En este repositorio se encuentra nuestro proyecto del ciclo 4 de MinTic",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon App",
+    "dev": "nodemon src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -17,10 +17,18 @@
     "url": "https://github.com/nataliadoria/G.P.I-Tech-ciclo-4/issues"
   },
   "homepage": "https://github.com/nataliadoria/G.P.I-Tech-ciclo-4#readme",
-  "type": "module",
+  
   "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "connect-flash": "^0.1.1",
     "express": "^4.17.1",
+    "express-handlebars": "^5.3.4",
+    "express-session": "^1.17.2",
+    "method-override": "^3.0.0",
+    "mongodb": "^4.1.4",
     "mongoose": "^6.0.12",
-    "nodemon": "^2.0.14"
+    "nodemon": "^2.0.14",
+    "passport": "^0.5.0",
+    "passport-local": "^1.0.0"
   }
 }
