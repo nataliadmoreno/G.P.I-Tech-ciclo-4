@@ -1,0 +1,289 @@
+//================ HU_001 ===============================
+
+use Sprint2
+
+db.createUser({
+	user:"susana@gmail.com"
+	pwd:passworddPrompt(),
+	customData: {status:"Pendiente"},
+	roles:[
+		{role:"read", db:"avances"},
+		{role:"readWrite", db:"proyectos"},
+		{role:"readWrite", db:"observaciones"},
+	]
+	}
+)
+
+
+//=======================================================
+
+db.user.insertOne({
+	user:"lina@gmail.com",
+	pwd:passwordPrompt(),
+	customData: {status:"Pendiente"},
+	roles:[
+		{role:"read", db:"avances"},
+		{role:"readWrite", db:"proyectos"},
+	]
+	}
+)
+
+//==========================================================
+
+db.user.insertOne({
+	user:"natalia@gmail.com",
+	pwd:passwordPrompt(),
+	customData: {status:"Pendiente"},
+	roles:[
+		{role:"readWrite", db:"avances"},
+		{role:"readWrite", db:"proyectos"},
+		{role:"readWrite", db:"observaciones"},		
+	]
+	}
+)
+
+//==========================================================
+
+//=================== HU_002 ===============================
+
+db.auth("camilo@gmail.com","NuevaContraseña");
+
+
+//==========================================================
+
+//================== HU_003 ================================
+
+db.getUser("camilo@gmail.com"
+	{
+		roles:[
+		{role:"readWrite", db:"avances"}]})
+
+
+//===========================================================
+
+//================== HU_004 =================================
+db.getUsers()
+
+//===========================================================
+
+//================== HU_005 =================================
+
+db.updateUser("susana@gmail.com",
+{
+	customData: {status:"Autorizado"}
+}
+)
+
+//===========================================================
+
+//================= HU_006 ==================================
+//Crear Proyectos
+
+
+
+
+db.proyectos.insert({
+"nombre":"Software de analisis financiero",
+"fecha":"12/12/2001",
+"presupuesto":"250USD",
+"lider":"CamiloTorres",
+"estado":"Inactivo",
+"fase":null
+})
+
+
+db.proyectos.insert({
+"nombre":"api de trading",
+"fecha":"12/12/2015",
+"presupuesto":"754USD",
+"lider":"SusanaPerez",
+"estado":"Inactivo",
+"fase":null
+})
+
+
+
+db.proyectos.find().pretty()
+
+//===========================================================
+
+//================ HU_007 ====================================
+
+db.proyectos.find()
+db.proyectos.find().pretty()
+
+db.proyectos.updateOne({
+"nombre":"api de trading"},
+{$set: {estado:"Activo"}}
+)
+
+//=============================================================
+
+// ================ HU_008 ====================================
+
+
+db.proyectos.updateOne({
+"nombre":"api de trading"},
+{$set: {estado:"Inactivo"}}
+)
+
+//===========================================================
+
+//================ HU_009 ====================================
+
+
+db.proyectos.updateOne({
+"nombre":"api de trading"},
+{$set: {fase:"Terminado"}}
+)
+
+//===========================================================
+
+//=============== HU_10 =====================================
+
+db.getUsers()
+
+///========================================================
+
+//================ HU_11 ===================================
+
+
+db.uer.updateOne({"susana@gmail.com}{$set: {state:"Autorizado"})
+
+//============================================================
+
+//================ HU_12 =====================================
+
+db.proyectos.insert({
+"nombre":api gestion de ventas",
+"fecha":"15/09/2021",
+"presupuesto":"300Usd",
+"lider":"wolfangvera",
+"estado":"Inactivo",
+"fase":null
+})
+
+//===================================================================
+
+//================ HU_13 ============================================
+
+db.proyectos.find(lider:"wolfangvera" )
+
+//===================================================================
+
+//================ HU-14 ============================================
+
+db.proyectos.upgateOne({"nombre":"api gestion de ventas"},
+			{$set:{nombre:"api inventario"
+			presupuesto:"500Usd"
+			fase:"en desarrollo"})
+//===================================================================
+
+//================ HU-15 ============================================
+
+db.inscripciones.insertOne({
+	proyecto:"La vida es Bella",
+	user:"lina bonilla",
+	cedula : "34243921",
+	customData: {status:"Aceptada"},
+	}
+)
+
+
+db.inscripciones.insertOne({
+	proyecto:"en busca de la verdad",
+	user:"camilo torres",
+	cedula : "17985632",
+	customData: {status:"Rechazada"},
+	}
+)
+
+
+db.inscripciones.find()
+
+//====================================================================
+
+//====================== HU-16 ======================================
+
+db.inscripciones.updateOne({
+	proyecto:"La vida es Bella"},
+	{$set:{status:"Rechazada"}}
+	)
+
+db.inscripciones.updateOne({
+	proyecto:"en busca de la verdad"},
+	{$set:{status:"Aceptada"}}
+	)
+	
+//===================================================================
+
+//====================== HU_17 =======================================
+
+db.avances.insertOne({
+_id:"6199b65e2bf774a92856831d",
+	fechaAva:20/11/2021,
+	descrip: "Buscando lo propio y mucho mas////----esto encontro "
+	}
+)
+
+
+db.avances.find()
+
+//======================================================================
+
+
+//========================= HU_18 ======================================
+
+db.avances.updateOne({
+_id:"6199b65e2bf774a92856831d"},
+	{$set:{obserLider:"Estas buscando equivocadamente"}})
+
+//======================================================================
+
+//========================= HU_019 ====================================
+
+db.proyectos.find().pretty()
+
+//=============================================================================
+
+//========================= HU_020 =============================================
+
+db.proyectos.updateOne({
+	Nombre:"Reforestación"},
+	{$set:{solicitudIncripcion:"solicito la incripcion mi nombre es Natalia"}}
+	)
+//================================================================================
+
+//======================= HU_021 ===================================================
+
+
+db.avances.find({_id:"6199b65e2bf774a92856831d"})
+
+//=================================================================================
+
+//======================= HU_022 ===================================================
+
+db.avances.updateOne({
+	_id:"6199b65e2bf774a92856831d"},
+	{$set:{descrip: 'podré ingresar la descripción de mi avance en el proyecto '}}
+	)
+
+//====================================================================================
+
+//========================= HU_023 ===================================================	
+
+
+db.avances.updateOne({
+	_id:"6199b65e2bf774a92856831d"},
+	{$set:{descrip: 'podré modificar la descripción del avance '}}
+	)
+
+///=====================================================================================
+
+
+
+
+
+
+
+
