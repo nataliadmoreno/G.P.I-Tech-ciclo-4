@@ -7,12 +7,12 @@ dotenv.config();
 
 const {DB_URI, DB_NAME, JWT_SECRET} = process.env;
 
-const getToken = (user) => jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn:'30 days' });
+const getToken = (user) => jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '30 days' });
 const getUserFromToken = async (token, db) => {
   if (!token) {return null}
   const tokenData = jwt.verify(token, JWT_SECRET);
-  if(!tokenData.id){
-    return null;
+  if(!tokenData?.id){
+    return null;  
   }
   return await db.collection('user').findOne({ _id: ObjectId(tokenData.id ) });
 }
@@ -23,19 +23,23 @@ const getUserFromToken = async (token, db) => {
 
 const resolvers = {
     Query: {
-      misProyectos: async(_, __, {db, user}) => { //ver lista de proyectos
-        if(!user){throw new Error("No esta autenticado, por favor inicie sesion");}
-        return await db.collection('proyectos').find({ userIds: user._id }).toArray();
+      misProyectos: async(_, __, { db,  user }) => {            //ver lista de proyectos
+        if ( !user ) { throw new Error('No esta autenticado, por favor inicie sesion'); }
+        return await db.collection('proyectos')
+                                  .find({ userIds: user._id })
+                                  .toArray();
       },
 
-      getproyectos: async(_, { id }, { db, user }) => {  //ver proyectos por ID
+      getproyectos: async(_, { id }, { db, user }) => {         //ver proyectos por ID
         if (!user) { throw new Error('Error de Autenticación, por favor inicie Sesión');}
         return await db.collection('proyectos').findOne({ _id: ObjectId(id) });
       },
 
-      misUsuarios: async(_, __, {db}) => {// ver lista de user
-        //if(!user){throw new Error("No esta autenticado, por favor inicie sesion");}
-        return await db.collection('user').find().toArray();      
+      misUsuarios: async(_, __, { db, user  }) => {              // ver lista de user
+        if( !user ) { throw new Error('No esta autenticado, por favor inicie sesion'); }
+        return await db.collection('user')
+                                  .find()
+                                  .toArray();      
       },
 
       getUsuarios: async(_, { id }, { db, user }) => {  //ver proyectos por ID
@@ -88,24 +92,32 @@ const resolvers = {
 
 
 
-    createproyecto: async (root, {nombreProy},{db, user}) =>{   //Registra un proyecto
+    createproyecto: async (root, {nombreProy,objGneral,objEspe,presupuesto,estadoPro,fase},{db, user}) =>{   //Registra un proyecto
       if(!user){console.log("No esta autenticado, por favor inicie sesion")}
 
       const newproyecto={
         nombreProy,
+        objGneral,
+        objEspe,
+        presupuesto,
         createdAt: new Date().toISOString(),
+        estadoPro,
+        fase,
         userIds: [user._id],
         userNames:[user.nombre],
+        userApe:[user.apellido],
         userRol:[user.rol]
       }
       console.log("Proyecto creado correctamente")
       const result = await db.collection("proyectos").insertOne(newproyecto);
       return newproyecto
     },
-    updateproyecto: async(root,{id,nombreProy},{db, user}) =>{ // Actualizamos un proyecto
+    
+    updateproyecto: async(root,{id,nombreProy,objGneral,objEspe,estadoPro,presupuesto,fase}, {db, user}) =>{ // Actualizamos un proyecto
       if(!user){console.log("No esta autenticado, por favor inicie sesion")}
       const result= await db.collection("proyectos").updateOne({_id:ObjectId(id)
-      },{ $set:{nombreProy} // se setea el nuevo nombre del proyecto
+      },{ $set:{nombreProy,objGneral,objEspe,estadoPro,presupuesto,fase}, // se setea el nuevo nombre del proyecto
+          
     })
     console.log("Proyecto Actulizado correctamente")
     return await db.collection("proyectos").findOne({_id:ObjectId(id)});//regresa los valores del proyecto Ingresado
@@ -147,18 +159,20 @@ const resolvers = {
     },  
 
   //Parametroinmutable del user, id:_id
-  user:{
+
+   user:{
     id:(root)=>{
       return root._id;
     }
-  },
+  }, 
+
 
   proyectos:{
-    id:({_id, id})=> _id||id,
+    id:({ _id, id })=> _id || id,
 
-    user: async ({userIds}, root, {db}) => Promise.all(
+    user: async ({ userIds }, _, { db }) => Promise.all(
       userIds.map((userId) => (
-        db.collection("user").findOne({_id:userId}))
+        db.collection("user").findOne({ _id: userId }))
       )
     ),
   },
@@ -208,41 +222,19 @@ start();
     
     misProyectos: [proyectos!]!
     getproyectos(id:ID!):proyectos
-    misUsuarios:[user!]!
+    misUsuarios: [user!]
     getUsuarios(id:ID!):user
   }
+ 
 
-  type user{
-    id: ID!
-    mail: String!
-    identificacion: String!
-    nombre: String!
-    apellido: String!
-    password: String!
-    rol: String!
-    status: String!
-  }
-
-  type proyectos{
-    id: ID!
-    nombreProy: String!
-    objGneral: String!
-    objEspe: String!
-    presupuesto: Float!
-    createdAt: String!
-    fechafin: String!
-    user: [user!]!
-    estadoPro: String!  
-    fase: String!
-  }
 
   type Mutation{
     signUp(input:SignUpInput):AutUser!
     signIn(input:SignInInput):AutUser!
     updateUsuario(id:ID!, nombre:String!, apellido:String!, identificacion:String!, rol:String, status:String):user!
 
-    createproyecto(nombreProy:String!):proyectos!
-    updateproyecto(id:ID!, nombreProy:String!):proyectos!
+    createproyecto(nombreProy:String!,objGneral:String!,objEspe:String!,presupuesto:Float!,estadoPro:String!,fase:String! ):proyectos!
+    updateproyecto(id:ID!, nombreProy:String!,objGneral:String!,objEspe:String!,presupuesto:Float!,estadoPro:String!,fase:String!):proyectos!
     deleteproyecto(id:ID!):Boolean!
 
     addUserProyecto(proyectosId:ID!, userId:ID!):proyectos
@@ -268,6 +260,30 @@ start();
   type AutUser{
     user:user!
     token: String!
+  }
+
+  type user{
+    id: ID!
+    mail: String!
+    identificacion: String!
+    nombre: String!
+    apellido: String!
+    password: String!
+    rol: String!
+    status: String!
+  }
+
+  type proyectos{
+    id: ID!
+    nombreProy: String!
+    objGneral: String!
+    objEspe: String!
+    presupuesto: Float!
+    createdAt: String!
+    fechafin: String!
+    user: [user!]!
+    estadoPro: String!  
+    fase: String!
   }
 
   type inscripciones{
