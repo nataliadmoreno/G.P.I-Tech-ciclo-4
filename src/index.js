@@ -23,22 +23,33 @@ const getUserFromToken = async (token, db) => {
 
 const resolvers = {
     Query: {
-      misProyectos: async(_, __, {db, user}) => {
+      misProyectos: async(_, __, {db, user}) => { //ver lista de proyectos
         if(!user){throw new Error("No esta autenticado, por favor inicie sesion");}
         return await db.collection('proyectos').find({ userIds: user._id }).toArray();
       },
 
-      getproyectos: async(_, { id }, { db, user }) => {  
-        if (!user) { throw new Error('Error de Autenticación, por favor inicie Sesión'); }
+      getproyectos: async(_, { id }, { db, user }) => {  //ver proyectos por ID
+        if (!user) { throw new Error('Error de Autenticación, por favor inicie Sesión');}
         return await db.collection('proyectos').findOne({ _id: ObjectId(id) });
+      },
+
+      misUsuarios: async(_, __, {db}) => {// ver lista de user
+        //if(!user){throw new Error("No esta autenticado, por favor inicie sesion");}
+        return await db.collection('user').find().toArray();      
+      },
+
+      getUsuarios: async(_, { id }, { db, user }) => {  //ver proyectos por ID
+        if (!user) { throw new Error('Error de Autenticación, por favor inicie Sesión');}
+        return await db.collection('user').findOne({ _id: ObjectId(id) });
       }
+
     },
 
   //Mutaciones
   Mutation: {
-      signUp: async(root,{input},{db}) => {      
+    signUp: async(root,{input},{db}) => {      //Registrarse
           const hashedPassword=bcrypt.hashSync(input.password)
-          const newUser={
+          const newUser={  // creamos nuevo usuario
             ...input,
             password:hashedPassword,
           }
@@ -52,7 +63,7 @@ const resolvers = {
       }
     },
 
-    signIn: async(root,{input},{db})=>{
+    signIn: async(root,{input},{db})=>{  //inicia sesion
       const user = await db.collection('user').findOne({ mail: input.mail });
       const isPasswordCorrect = user && bcrypt.compareSync(input.password, user.password);
 
@@ -66,31 +77,74 @@ const resolvers = {
       }
     },
 
-    createproyecto: async (root, {nombreProy},{db, user}) =>{
+    updateUsuario: async(_,{id,nombre,apellido,identificacion,rol,status},{db, user}) =>{ // Actualizamos un usuario
+      if(!user){console.log("No esta autenticado, por favor inicie sesion")}
+      const result= await db.collection("user").updateOne({_id:ObjectId(id)
+      },{ $set:{nombre,apellido,identificacion,rol,status} // se setea el nuevo nombre del proyecto
+    })
+    console.log("Usuario Actulizado correctamente")
+    return await db.collection("user").findOne({_id:ObjectId(id)});//regresa los valores del proyecto Ingresado
+    },
+
+
+
+    createproyecto: async (root, {nombreProy},{db, user}) =>{   //Registra un proyecto
       if(!user){console.log("No esta autenticado, por favor inicie sesion")}
 
       const newproyecto={
         nombreProy,
         createdAt: new Date().toISOString(),
-        userIds: [user._id,user.nombre,user.rol]
+        userIds: [user._id],
+        userNames:[user.nombre],
+        userRol:[user.rol]
       }
+      console.log("Proyecto creado correctamente")
       const result = await db.collection("proyectos").insertOne(newproyecto);
       return newproyecto
     },
-    updateproyecto: async(root,{id,nombreProy},{db, user}) =>{
+    updateproyecto: async(root,{id,nombreProy},{db, user}) =>{ // Actualizamos un proyecto
       if(!user){console.log("No esta autenticado, por favor inicie sesion")}
       const result= await db.collection("proyectos").updateOne({_id:ObjectId(id)
-      },{ $set:{nombreProy}
+      },{ $set:{nombreProy} // se setea el nuevo nombre del proyecto
     })
+    console.log("Proyecto Actulizado correctamente")
+    return await db.collection("proyectos").findOne({_id:ObjectId(id)});//regresa los valores del proyecto Ingresado
     },
 
-    deleteproyecto: async(root, {id}, {db, user}) =>{
+    deleteproyecto: async(root, {id}, {db, user}) =>{ // elimina un proyecto
       if(!user){console.log("No esta autenticado, por favor inicie sesion")}
       await db.collection("proyectos").remove({_id:ObjectId(id)});
       console.log("Tarea Eliminada Correctamente")
       return true;
-    }
-  },  
+    },
+    
+     addUserProyecto: async(root,{proyectosId, userId}, {db,user}) =>{
+      if(!user){console.log("No esta autenticado favor iniciar sesion")}
+      const proyectos = await db.collection(proyectos).findOne({_id:ObjectId(proyectosId)});
+      const usuario = await db.collection("user").findOne({_id:ObjectId(userId)});
+
+      if(!proyectos){
+        return null;
+      }
+      if(proyectos.userIds.find((dbId) => dbId.toString()===userId.toString())){
+        return proyectos;
+      }
+      await db.collection("proyectos").updateOne({_id:ObjectId(proyectosId)
+      },{
+        $push:{
+          userIds:ObjectId(userId),
+          userNames:usuario.nombre,
+          userRol:user.rol,
+        }
+      })
+      proyectos.userIds.push(ObjectId(userId))
+      proyectos.userNames.push(usuario.nombre)
+      proyectos.userRol.push(usuario.rol)
+      return proyectos;      
+      } 
+
+
+    },  
 
   //Parametroinmutable del user, id:_id
   user:{
@@ -103,8 +157,8 @@ const resolvers = {
     id:({_id, id})=> _id||id,
 
     user: async ({userIds}, root, {db}) => Promise.all(
-      userIds.map(() => (
-        db.collection("user").findOne({_id:userIds[0]}))
+      userIds.map((userId) => (
+        db.collection("user").findOne({_id:userId}))
       )
     ),
   },
@@ -151,8 +205,11 @@ start();
   const typeDefs = gql`
 
   type Query{
+    
     misProyectos: [proyectos!]!
     getproyectos(id:ID!):proyectos
+    misUsuarios:[user!]!
+    getUsuarios(id:ID!):user
   }
 
   type user{
@@ -182,10 +239,13 @@ start();
   type Mutation{
     signUp(input:SignUpInput):AutUser!
     signIn(input:SignInInput):AutUser!
+    updateUsuario(id:ID!, nombre:String!, apellido:String!, identificacion:String!, rol:String, status:String):user!
 
     createproyecto(nombreProy:String!):proyectos!
     updateproyecto(id:ID!, nombreProy:String!):proyectos!
     deleteproyecto(id:ID!):Boolean!
+
+    addUserProyecto(proyectosId:ID!, userId:ID!):proyectos
   }
 
 
@@ -194,8 +254,10 @@ start();
     mail: String!
     identificacion: String!
     nombre: String!
+    apellido:String!
     password: String!
     rol: String!
+    status:String!
   }
   input SignInInput{
 
