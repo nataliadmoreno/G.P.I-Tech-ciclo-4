@@ -23,11 +23,14 @@ const getUserFromToken = async (token, db) => {
 
 const resolvers = {
     Query: {
-      misProyectos: async(_, __, { db,  user }) => {            //ver lista de proyectos
+      misProyectosLider: async(_, __, { db,  user }) => {            //ver lista de proyectos
         if ( !user ) { throw new Error('No esta autenticado, por favor inicie sesion'); }
-        return await db.collection('proyectos')
-                                  .find({ userIds: user._id })
-                                  .toArray();
+        const rol = user.rol
+        if ( rol=="Lider") {
+            return await db.collection('proyectos')
+                                    .find({ userIds: user._id })
+                                    .toArray();
+        }
       },
 
       getproyectos: async(_, { id }, { db, user }) => {         //ver proyectos por ID
@@ -37,10 +40,19 @@ const resolvers = {
 
       misUsuarios: async(_, __, { db, user  }) => {              // ver lista de user
         if( !user ) { throw new Error('No esta autenticado, por favor inicie sesion'); }
-        return await db.collection('user')
+
+        const rol = user.rol
+        if ( rol=="Lider" )  {
+
+          return await db.collection('user').find( {rol: "Estudiante"} ).toArray();
+          
+        }
+        if (rol == "Administrador"){
+         return await db.collection('user')
                                   .find()
-                                  .toArray();      
-      },
+                                  .toArray(); 
+        }                             
+      }, 
 
       getUsuarios: async(_, { id }, { db, user }) => {  //ver proyectos por ID
         if (!user) { throw new Error('Error de Autenticación, por favor inicie Sesión');}
@@ -81,42 +93,84 @@ const resolvers = {
       }
     },
 
-    updateUsuario: async(_,{id,nombre,apellido,identificacion,rol,status},{db, user}) =>{ // Actualizamos un usuario
+    updateUsuarioAdmin: async(_,{id,status},{db, user }) =>{ // Actualizamos un usuario
       if(!user){console.log("No esta autenticado, por favor inicie sesion")}
-      const result= await db.collection("user").updateOne({_id:ObjectId(id)
-      },{ $set:{nombre,apellido,identificacion,rol,status} // se setea el nuevo nombre del proyecto
-    })
-    console.log("Usuario Actulizado correctamente")
-    return await db.collection("user").findOne({_id:ObjectId(id)});//regresa los valores del proyecto Ingresado
+      const rol = user.rol
+      if ( rol=="Administrador")  { 
+        
+        const result= await db.collection('user').updateOne({_id:ObjectId(id)
+        },{ $set:{status} // se setea el nuevo nombre del proyecto
+      })
+      console.log("Usuario Actulizado correctamente")
+      return await db.collection("user").findOne({_id:ObjectId(id)});//regresa los valores del proyecto Ingresado
+      }
     },
 
+    updateUsuarioLider: async(_,{id,status},{db, user }) =>{ // Actualizamos un usuario
+      if(!user){console.log("No esta autenticado, por favor inicie sesion")}
+      const rol = user.rol
+      if ( rol=="Lider")  { 
+        
+        const result= await db.collection('user').updateOne({_id:ObjectId(id)
+        },{ $set:{status} // se setea el nuevo nombre del proyecto
+      })
+      console.log("Usuario Actulizado correctamente")
+      return await db.collection("user").findOne({_id:ObjectId(id)});//regresa los valores del proyecto Ingresado
+      }
+    },
+
+
+    updateUsuario: async(_,{id,nombre,apellido,identificacion,password},{db, user}) =>{ // Actualizamos un usuario
+      if(!user){console.log("No esta autenticado, por favor inicie sesion")}
+        const result= await db.collection("user").updateOne({_id:ObjectId(id)
+        },{ $set:{nombre,apellido,identificacion,password} // se setea el nuevo nombre del proyecto
+      })
+      console.log("Usuario Actulizado correctamente")
+      return await db.collection("user").findOne({_id:ObjectId(id)});//regresa los valores del proyecto Ingresado
+    }, 
 
 
     createproyecto: async (root, {nombreProy,objGneral,objEspe,presupuesto,estadoPro,fase},{db, user}) =>{   //Registra un proyecto
       if(!user){console.log("No esta autenticado, por favor inicie sesion")}
-
-      const newproyecto={
-        nombreProy,
-        objGneral,
-        objEspe,
-        presupuesto,
-        createdAt: new Date().toISOString(),
-        estadoPro,
-        fase,
-        userIds: [user._id],
-        userNames:[user.nombre],
-        userApe:[user.apellido],
-        userRol:[user.rol]
+      const rol = user.rol
+      if ( rol=="Lider") {
+        const newproyecto={
+          nombreProy,
+          objGneral,
+          objEspe,
+          presupuesto,
+          createdAt: new Date().toISOString(),
+          estadoPro,
+          fase,
+          userIds: [user._id],
+          userNames:[user.nombre],
+          userApe:[user.apellido],
+          userRol:[user.rol]
+        }
+        console.log("Proyecto creado correctamente")
+        const result = await db.collection("proyectos").insertOne(newproyecto);
+        return newproyecto
       }
-      console.log("Proyecto creado correctamente")
-      const result = await db.collection("proyectos").insertOne(newproyecto);
-      return newproyecto
     },
     
-    updateproyecto: async(root,{id,nombreProy,objGneral,objEspe,estadoPro,presupuesto,fase}, {db, user}) =>{ // Actualizamos un proyecto
+    updateproyectoAdmin: async(root,{id,estadoPro,fase}, {db, user}) =>{ // Actualizamos un proyecto
+      if(!user){console.log("No esta autenticado, por favor inicie sesion")}
+      const rol = user.rol
+      if ( rol=="Administrador") {
+        const result= await db.collection("proyectos").updateOne({_id:ObjectId(id)
+        },{ $set:{estadoPro,fase}, // se setea el nuevo nombre del proyecto
+          
+        })
+        console.log("Proyecto Actulizado correctamente")
+        return await db.collection("proyectos").findOne({_id:ObjectId(id)});//regresa los valores del proyecto Ingresado
+      } 
+    },
+
+
+    updateproyectoLider: async(root,{id,nombreProy,objGneral,objEspe,presupuesto}, {db, user}) =>{ // Actualizamos un proyecto
       if(!user){console.log("No esta autenticado, por favor inicie sesion")}
       const result= await db.collection("proyectos").updateOne({_id:ObjectId(id)
-      },{ $set:{nombreProy,objGneral,objEspe,estadoPro,presupuesto,fase}, // se setea el nuevo nombre del proyecto
+      },{ $set:{nombreProy,objGneral,objEspe,presupuesto}, // se setea el nuevo nombre del proyecto
           
     })
     console.log("Proyecto Actulizado correctamente")
@@ -221,6 +275,7 @@ start();
   type Query{
     
     misProyectos: [proyectos!]!
+    misProyectosLider: [proyectos!]!
     getproyectos(id:ID!):proyectos
     misUsuarios: [user!]
     getUsuarios(id:ID!):user
@@ -231,10 +286,13 @@ start();
   type Mutation{
     signUp(input:SignUpInput):AutUser!
     signIn(input:SignInInput):AutUser!
-    updateUsuario(id:ID!, nombre:String!, apellido:String!, identificacion:String!, rol:String, status:String):user!
+    updateUsuarioAdmin(id:ID!, status:String):user!
+    updateUsuarioLider(id:ID!, status:String):user!
+    updateUsuario(id:ID!, nombre:String!, apellido:String!, identificacion:String!,password:String!):user!
 
     createproyecto(nombreProy:String!,objGneral:String!,objEspe:String!,presupuesto:Float!,estadoPro:String!,fase:String! ):proyectos!
-    updateproyecto(id:ID!, nombreProy:String!,objGneral:String!,objEspe:String!,presupuesto:Float!,estadoPro:String!,fase:String!):proyectos!
+    updateproyectoAdmin(id:ID!,estadoPro:String!,fase:String!):proyectos!
+    updateproyectoLider(id:ID!, nombreProy:String!,objGneral:String!,objEspe:String!,presupuesto:Float!):proyectos!
     deleteproyecto(id:ID!):Boolean!
 
     addUserProyecto(proyectosId:ID!, userId:ID!):proyectos
