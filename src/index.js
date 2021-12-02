@@ -23,7 +23,9 @@ const getUserFromToken = async (token, db) => {
 
 const resolvers = {
     Query: {
-      misProyectosLider: async(_, __, { db,  user }) => {            //ver lista de proyectos
+
+      
+      misProyectos: async(_, __, { db,  user }) => {            //ver lista de proyectos
         if ( !user ) { throw new Error('No esta autenticado, por favor inicie sesion'); }
         const rol = user.rol
         if ( rol=="Lider") {
@@ -31,8 +33,20 @@ const resolvers = {
                                     .find({ userIds: user._id })
                                     .toArray();
         }
-      },
 
+        if ( rol=="Estudiante") {
+          return await db.collection('proyectos')
+                                  .find({ userIds: user._id })
+                                  .toArray();
+        }
+
+        if ( rol=="Administrador") {
+            return await db.collection('proyectos')
+                                    .find()
+                                    .toArray();
+        }
+      },
+      
       getproyectos: async(_, { id }, { db, user }) => {         //ver proyectos por ID
         if (!user) { throw new Error('Error de Autenticación, por favor inicie Sesión');}
         return await db.collection('proyectos').findOne({ _id: ObjectId(id) });
@@ -209,7 +223,6 @@ const resolvers = {
       return proyectos;      
       } 
 
-
     },  
 
   //Parametroinmutable del user, id:_id
@@ -275,7 +288,7 @@ start();
   type Query{
     
     misProyectos: [proyectos!]!
-    misProyectosLider: [proyectos!]!
+     
     getproyectos(id:ID!):proyectos
     misUsuarios: [user!]
     getUsuarios(id:ID!):user
