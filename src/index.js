@@ -33,11 +33,11 @@ const resolvers = {
                                     .toArray();
         }
 
-        if ( rol=="Estudiante") {
+         if ( rol="Estudiante") {
           return await db.collection('proyectos')
                                   .find({ userIds: user._id })
                                   .toArray();
-        }
+        } 
 
         if ( rol=="Administrador") {
             return await db.collection('proyectos')
@@ -222,7 +222,7 @@ const resolvers = {
       return proyectos;      
       } ,
 
-      createInsc: async (root, {estadoIns },{db, user}) =>{   //Registra un proyecto
+       createInsc: async (root, {estadoIns },{db, user}) =>{   //Registra un proyecto
         if(!user){console.log("No esta autenticado, por favor inicie sesion")}
         const rol = user.rol
         if ( rol=="Estudiante") {
@@ -237,7 +237,7 @@ const resolvers = {
           return newinscripciones
         }
       },
-
+ 
 
 
 
@@ -264,19 +264,11 @@ const resolvers = {
     ),
   },
 
-  inscripciones: {
+   inscripciones: {
     id:({ _id, id })=> _id || id,
 
-    user: async ({ userIds }, _, { db }) => Promise.all(
-      userIds.map((userId) => (
-        db.collection("user").findOne({ _id: userId }))
-      )
-    ),
   },
-
-
-
-
+ 
 }
 
 
@@ -343,7 +335,7 @@ start();
 
     addUserProyecto(proyectosId:ID!, userId:ID!):proyectos
 
-    createInsc(estadoIns)inscripciones!
+    createInsc(estadoIns:String!):inscripciones!
   }
 
 
