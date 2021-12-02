@@ -23,7 +23,6 @@ const getUserFromToken = async (token, db) => {
 
 const resolvers = {
     Query: {
-
       
       misProyectos: async(_, __, { db,  user }) => {            //ver lista de proyectos
         if ( !user ) { throw new Error('No esta autenticado, por favor inicie sesion'); }
@@ -200,7 +199,7 @@ const resolvers = {
     
      addUserProyecto: async(root,{proyectosId, userId}, {db,user}) =>{
       if(!user){console.log("No esta autenticado favor iniciar sesion")}
-      const proyectos = await db.collection(proyectos).findOne({_id:ObjectId(proyectosId)});
+      const proyectos = await db.collection("proyectos").findOne({_id:ObjectId(proyectosId)});
       const usuario = await db.collection("user").findOne({_id:ObjectId(userId)});
 
       if(!proyectos){
@@ -214,14 +213,35 @@ const resolvers = {
         $push:{
           userIds:ObjectId(userId),
           userNames:usuario.nombre,
-          userRol:user.rol,
+          userRol:usuario.rol,
         }
       })
       proyectos.userIds.push(ObjectId(userId))
       proyectos.userNames.push(usuario.nombre)
       proyectos.userRol.push(usuario.rol)
       return proyectos;      
-      } 
+      } ,
+
+      createInsc: async (root, {estadoIns },{db, user}) =>{   //Registra un proyecto
+        if(!user){console.log("No esta autenticado, por favor inicie sesion")}
+        const rol = user.rol
+        if ( rol=="Estudiante") {
+          const newinscripciones={
+            proyectosId:ObjectId(proyectosId),
+            userIds: [user._id],
+            estadoIns,
+
+          }
+          console.log("Proyecto creado correctamente")
+          const result = await db.collection("inscripciones").insertOne(newinscripciones);
+          return newinscripciones
+        }
+      },
+
+
+
+
+
 
     },  
 
@@ -243,6 +263,19 @@ const resolvers = {
       )
     ),
   },
+
+  inscripciones: {
+    id:({ _id, id })=> _id || id,
+
+    user: async ({ userIds }, _, { db }) => Promise.all(
+      userIds.map((userId) => (
+        db.collection("user").findOne({ _id: userId }))
+      )
+    ),
+  },
+
+
+
 
 }
 
@@ -309,6 +342,8 @@ start();
     deleteproyecto(id:ID!):Boolean!
 
     addUserProyecto(proyectosId:ID!, userId:ID!):proyectos
+
+    createInsc(estadoIns)inscripciones!
   }
 
 
