@@ -203,12 +203,15 @@ const resolvers = {
 
     updateproyectoLider: async(root,{id,nombreProy,objGneral,objEspe,presupuesto}, {db, user}) =>{ // Actualizamos un proyecto
       if(!user){console.log("No esta autenticado, por favor inicie sesion")}
+      const rol = user.rol
+      if ( rol=="Lider") {
       const result= await db.collection("proyectos").updateOne({_id:ObjectId(id)
       },{ $set:{nombreProy,objGneral,objEspe,presupuesto}, // se setea el nuevo nombre del proyecto
           
-    })
-    console.log("Proyecto Actulizado correctamente")
-    return await db.collection("proyectos").findOne({_id:ObjectId(id)});//regresa los valores del proyecto Ingresado
+      })
+      console.log("Proyecto Actulizado correctamente")
+      return await db.collection("proyectos").findOne({_id:ObjectId(id)});//regresa los valores del proyecto Ingresado
+      }
     },
 
     deleteproyecto: async(root, {id}, {db, user}) =>{ // elimina un proyecto
@@ -250,9 +253,9 @@ const resolvers = {
                             
           const newinscripciones={
 
-            proyectosId:[ObjectId(proyectosId)],            
-            userId:[ObjectId(userId)],
-            
+            proyectosId: ObjectId(proyectosId), 
+                 
+            userId: ObjectId(userId),
             userNames:[user.nombre],
             userApe:[user.apellido],
             userRol:[user.rol],
@@ -263,6 +266,19 @@ const resolvers = {
           const result = await db.collection("inscripciones").insertOne(newinscripciones);          
           return newinscripciones;
 
+        }
+      },
+
+      updateInscripcionesLider: async(root,{id,estadoIns}, {db, user}) =>{ // Actualizamos un proyecto
+        if(!user){console.log("No esta autenticado, por favor inicie sesion")}
+        const rol = user.rol
+        if ( rol=="Lider")  { 
+        const result= await db.collection("inscripcipones").updateOne({_id:ObjectId(id)  
+        },{ 
+            $set: {estadoIns} // se setea el nuevo nombre del proyecto 
+          })        
+        console.log("Inscripcion Actulizada correctamente")
+        return await db.collection("inscripciones").findOne({_id:ObjectId(id)});//regresa los valores del proyecto Ingresado
         }
       },
  
@@ -289,14 +305,16 @@ const resolvers = {
   //===============================================================
 
    inscripciones: {
-    id:({ _id, id })=> _id || id,
-
-    proyectos: async ({proyectosId}, _, {db}) =>(
-      await db.collection("proyectos").findOne({_id:proyectosId})
+     
+    id:(root)=>{
+      return root._id;
+    },
+    proyectos: async ({ proyectosId }, _, { db }) =>(
+      await db.collection("proyectos").findOne({ _id:ObjectId(proyectosId)})
       ),
 
     user: async ({ userId }, _, { db }) => (
-      await db.collection("user").findOne({ _id:userId})
+      await db.collection("user").findOne({ _id:ObjectId(userId)})
       ),
   },
   //==================================================================
@@ -370,6 +388,8 @@ start();
     addUserProyecto(proyectosId:ID!, userId:ID!,):proyectos
 
     createinscripciones(proyectosId:ID!,userId:ID!,estadoIns:String!):inscripciones!
+
+    updateInscripcionesLider(id:ID!,estadoIns:String!):inscripciones!
   }
 
 
