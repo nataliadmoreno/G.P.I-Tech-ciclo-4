@@ -33,9 +33,9 @@ const resolvers = {
                                     .toArray();
         }
 
-         if ( rol="Estudiante") {
+         if ( rol=="Estudiante") {
           return await db.collection('proyectos')
-                                  .find({ userIds: user._id })
+                                  .find()
                                   .toArray();
         } 
 
@@ -70,7 +70,28 @@ const resolvers = {
       getUsuarios: async(_, { id }, { db, user }) => {  //ver proyectos por ID
         if (!user) { throw new Error('Error de Autenticación, por favor inicie Sesión');}
         return await db.collection('user').findOne({ _id: ObjectId(id) });
+      },
+
+      misInscripciones: async(_, __, { db, user  }) => {              // ver lista de inscripciones
+        if( !user ) { throw new Error('No esta autenticado, por favor inicie sesion'); }
+
+        const rol = user.rol
+        if ( rol=="Lider" )  {
+
+          return await db.collection('inscripciones')
+          .find()
+          .toArray();
+          
+        }
+                             
+      }, 
+
+      getInscripciones: async(_, { id }, { db, user }) => {  //ver inscripciones por ID
+        if (!user) { throw new Error('Error de Autenticación, por favor inicie Sesión');}
+        return await db.collection('inscripciones').findOne({ _id: ObjectId(id) });
       }
+
+
 
     },
 
@@ -205,15 +226,15 @@ const resolvers = {
       if(!proyectos){
         return null;
       }
-      if(proyectos.userIds.find((dbId) => dbId.toString()===userId.toString())){
+      if(proyectos.userIds.find((dbId) => dbId.toString()=== userId.toString())){
         return proyectos;
       }
       await db.collection("proyectos").updateOne({_id:ObjectId(proyectosId)
       },{
         $push:{
           userIds:ObjectId(userId),
-          userNames:usuario.nombre,
-          userRol:usuario.rol,
+          userNames:usuario.nombre
+          
         }
       })
       proyectos.userIds.push(ObjectId(userId))
@@ -222,27 +243,29 @@ const resolvers = {
       return proyectos;      
       } ,
 
-       createInsc: async (root, {estadoIns },{db, user}) =>{   //Registra un proyecto
+       createinscripciones: async (root, {proyectosId,userId,estadoIns },{db, user}) =>{   
         if(!user){console.log("No esta autenticado, por favor inicie sesion")}
         const rol = user.rol
         if ( rol=="Estudiante") {
+                            
           const newinscripciones={
-            proyectosId:ObjectId(proyectosId),
-            userIds: [user._id],
-            estadoIns,
 
+            proyectosId:[ObjectId(proyectosId)],            
+            userId:[ObjectId(userId)],
+            
+            userNames:[user.nombre],
+            userApe:[user.apellido],
+            userRol:[user.rol],
+            estadoIns
           }
-          console.log("Proyecto creado correctamente")
-          const result = await db.collection("inscripciones").insertOne(newinscripciones);
-          return newinscripciones
+          
+          console.log("Inscripcion creado correctamente")
+          const result = await db.collection("inscripciones").insertOne(newinscripciones);          
+          return newinscripciones;
+
         }
       },
  
-
-
-
-
-
     },  
 
   //Parametroinmutable del user, id:_id
@@ -253,7 +276,7 @@ const resolvers = {
     }
   }, 
 
-
+  //===========================================================
   proyectos:{
     id:({ _id, id })=> _id || id,
 
@@ -263,11 +286,20 @@ const resolvers = {
       )
     ),
   },
+  //===============================================================
 
    inscripciones: {
     id:({ _id, id })=> _id || id,
 
+    proyectos: async ({proyectosId}, _, {db}) =>(
+      await db.collection("proyectos").findOne({_id:proyectosId})
+      ),
+
+    user: async ({ userId }, _, { db }) => (
+      await db.collection("user").findOne({ _id:userId})
+      ),
   },
+  //==================================================================
  
 }
 
@@ -313,10 +345,12 @@ start();
   type Query{
     
     misProyectos: [proyectos!]!
-     
+
     getproyectos(id:ID!):proyectos
     misUsuarios: [user!]
     getUsuarios(id:ID!):user
+    misInscripciones:[inscripciones!]!
+    getInscripciones(id:ID!):inscripciones
   }
  
 
@@ -333,9 +367,9 @@ start();
     updateproyectoLider(id:ID!, nombreProy:String!,objGneral:String!,objEspe:String!,presupuesto:Float!):proyectos!
     deleteproyecto(id:ID!):Boolean!
 
-    addUserProyecto(proyectosId:ID!, userId:ID!):proyectos
+    addUserProyecto(proyectosId:ID!, userId:ID!,):proyectos
 
-    createInsc(estadoIns:String!):inscripciones!
+    createinscripciones(proyectosId:ID!,userId:ID!,estadoIns:String!):inscripciones!
   }
 
 
