@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { StyleSheet } from 'react-native';
 
-import EditScreenInfo from '../components/EditScreenInfo';
+//import EditScreenInfo from '../components/EditScreenInfo';
 import { Text, View } from '../components/Themed';
 
 export default function ProgressScreen() {
@@ -9,7 +9,7 @@ export default function ProgressScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Módulo de Gestión de Avances</Text>
       <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="/screens/ProgressScreen.tsx" />
+      {/* <EditScreenInfo path="/screens/ProgressScreen.tsx" /> */}
     </View>
   );
 }

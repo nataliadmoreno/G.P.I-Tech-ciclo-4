@@ -13,7 +13,7 @@ export default function TeamScreen() {
       <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
       {/* <EditScreenInfo path="/screens/TeamScreen.tsx" /> */}
 
-      <div>
+      <div style={{ color: 'white' }}>
             <p>
                 Esta aplicación fue desarrollada para cumplir con los requisitos del Ciclo 4 en la Misión TIC 2021:
             </p>
